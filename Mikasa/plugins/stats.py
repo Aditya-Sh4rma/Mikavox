@@ -1,9 +1,5 @@
-"""
-Mikasa/plugins/stats.py
-/stats -> total bot-started users + total groups jinme bot hai, dikhata hai.
-"""
-
 from pyrogram import Client, filters
+from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from Mikasa import mongo
@@ -20,5 +16,5 @@ def register(app: Client):
             "📊 <b>Mikasa Stats</b>\n\n"
             f"👤 Total Users: <code>{users}</code>\n"
             f"👥 Total Groups: <code>{groups}</code>",
-            parse_mode="html",
+            parse_mode=ParseMode.HTML,
         )
