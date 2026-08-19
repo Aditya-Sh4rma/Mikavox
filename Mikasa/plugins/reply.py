@@ -1,12 +1,3 @@
-"""
-Mikasa/plugins/reply.py
-Auto-reply system:
-  - Startup pe replies.json + smart_replies.json (root mein) ek baar load
-    hoke memory mein cache ho jaate hain (disk dobara nahi chuena, fast rahega)
-  - Anti-spam + anti-link
-  - Har reply ke aage ek random premium emoji lagta hai (Mikasa/emoji.py se)
-"""
-
 import asyncio
 import json
 import os
@@ -20,13 +11,8 @@ from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
 from config import ADMIN_IDS, REPLY_CHANCE, SPAM_LIMIT, SPAM_WINDOW
-from Mikasa.emoji import get_random_emoji_html
+from Mikasa.emoji import PREMIUM_EMOJIS, get_random_emoji_html
 
-# =============================
-# CACHE — startup par ek baar load, phir sirf memory se
-# Root folder mein replies.json / smart_replies.json hain (Mikasa/ ke bahar),
-# isliye path do folder upar jaake dhundhta hai.
-# =============================
 _ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 with open(os.path.join(_ROOT_DIR, "replies.json"), "r", encoding="utf-8") as f:
@@ -40,21 +26,49 @@ print(
     f"{len(SMART_REPLIES)} smart-reply keywords."
 )
 
-# =============================
-# RUNTIME STATE
-# =============================
 warns = defaultdict(int)
 muted_users: set[int] = set()
 user_messages = defaultdict(lambda: deque(maxlen=SPAM_LIMIT))
 
+group_msg_count: dict[int, int] = defaultdict(int)
+group_threshold: dict[int, int] = {}
+
 link_pattern = re.compile(r"(https?://|t\.me/|www\.)")
 
 
+def _get_threshold(chat_id: int) -> int:
+    if chat_id not in group_threshold:
+        group_threshold[chat_id] = random.randint(20, 30)
+    return group_threshold[chat_id]
+
+
 async def _send_with_emoji(message: Message, text: str):
-    """Premium emoji ko reply ke aage lagata hai, phir HTML mode mein bhejta hai."""
     emoji_tag = get_random_emoji_html()
     final_text = f"{emoji_tag} {text}" if emoji_tag else text
     await message.reply_text(final_text, parse_mode=ParseMode.HTML)
+
+
+async def _react(client: Client, message: Message):
+    if PREMIUM_EMOJIS:
+        emoji_char, emoji_id = random.choice(list(PREMIUM_EMOJIS.items()))
+        try:
+            await client.send_reaction(
+                chat_id=message.chat.id,
+                message_id=message.id,
+                emoji=int(emoji_id),
+            )
+            return
+        except Exception:
+            pass
+
+    try:
+        await client.send_reaction(
+            chat_id=message.chat.id,
+            message_id=message.id,
+            emoji="❤️",
+        )
+    except Exception:
+        pass
 
 
 def register(app: Client):
@@ -65,27 +79,24 @@ def register(app: Client):
             return
 
         sender_id = message.from_user.id
+        chat_id = message.chat.id
 
-        # Admin skip
         if sender_id in ADMIN_IDS:
             return
 
-        # Group admin skip
         if message.chat.type in ("group", "supergroup"):
             try:
-                member = await client.get_chat_member(message.chat.id, sender_id)
+                member = await client.get_chat_member(chat_id, sender_id)
                 if member.status in ("administrator", "creator"):
                     return
             except Exception:
                 pass
 
-        # Muted user skip
         if sender_id in muted_users:
             return
 
         text = (message.text or "").lower().strip()
 
-        # ---- Anti-spam ----
         now = time.time()
         user_messages[sender_id].append(now)
 
@@ -99,7 +110,6 @@ def register(app: Client):
                     await message.reply_text("🔇 Spam ကြောင့် Mute လုပ်လိုက်ပါပြီ")
                 return
 
-        # ---- Anti-link ----
         if link_pattern.search(text):
             try:
                 await message.delete()
@@ -107,14 +117,44 @@ def register(app: Client):
                 pass
             return
 
-        # ---- Smart reply (keyword match) ----
+        is_reply_to_bot = (
+            message.reply_to_message is not None
+            and message.reply_to_message.from_user is not None
+            and message.reply_to_message.from_user.id == client.me.id
+        )
+
+        if is_reply_to_bot:
+            if DEFAULT_REPLIES:
+                await asyncio.sleep(random.randint(1, 3))
+                await _send_with_emoji(message, random.choice(DEFAULT_REPLIES))
+                await _react(client, message)
+            return
+
         for key, replies in SMART_REPLIES.items():
             if key.lower() in text:
                 await asyncio.sleep(random.randint(1, 3))
                 await _send_with_emoji(message, random.choice(replies))
+                await _react(client, message)
                 return
 
-        # ---- Default reply (random chance) ----
         if DEFAULT_REPLIES and random.randint(1, 100) <= REPLY_CHANCE:
             await asyncio.sleep(random.randint(2, 5))
             await _send_with_emoji(message, random.choice(DEFAULT_REPLIES))
+            await _react(client, message)
+            return
+
+        if message.chat.type in ("group", "supergroup"):
+            group_msg_count[chat_id] += 1
+            if group_msg_count[chat_id] >= _get_threshold(chat_id):
+                group_msg_count[chat_id] = 0
+                group_threshold.pop(chat_id, None)
+
+                if PREMIUM_EMOJIS:
+                    emoji_char, emoji_id = random.choice(list(PREMIUM_EMOJIS.items()))
+                    emoji_tag = f'<emoji id="{emoji_id}">{emoji_char}</emoji>'
+                    try:
+                        await client.send_message(
+                            chat_id, emoji_tag, parse_mode=ParseMode.HTML
+                        )
+                    except Exception:
+                        pass
