@@ -13,8 +13,8 @@ def register(app: Client):
         groups = await mongo.total_groups()
 
         await message.reply_text(
-            "📊 <b>Mikasa Stats</b>\n\n"
-            f"👤 Total Users: <code>{users}</code>\n"
-            f"👥 Total Groups: <code>{groups}</code>",
+            "<b>Mikasa Stats</b>\n\n"
+            f"Total Users: <code>{users}</code>\n"
+            f"Total Groups: <code>{groups}</code>",
             parse_mode=ParseMode.HTML,
         )
