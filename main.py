@@ -1,7 +1,7 @@
 from pyrogram import Client
 
 import config
-from Mikasa.plugins import broadcast, logger, reply, start, stats
+from Mikasa.plugins import broadcast, linkfilter, logger, reply, start, stats
 
 config.validate()
 
@@ -14,6 +14,7 @@ app = Client(
 
 start.register(app)
 reply.register(app)
+linkfilter.register(app)
 broadcast.register(app)
 stats.register(app)
 logger.register(app)
