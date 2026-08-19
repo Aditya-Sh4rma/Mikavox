@@ -73,7 +73,7 @@ async def _react(client: Client, message: Message):
 
 def register(app: Client):
 
-    @app.on_message(filters.text & ~filters.command(""))
+    @app.on_message(filters.text & ~filters.regex(r"^/"))
     async def auto_reply(client: Client, message: Message):
         if message.from_user is None:
             return
