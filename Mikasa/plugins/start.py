@@ -29,14 +29,26 @@ def register(app: Client):
         if is_new:
             await log_user_start(client, message.from_user)
 
+        bot = await client.get_me()
+        bot_username = bot.username
+
         buttons = InlineKeyboardMarkup(
             [
+                [
+                    InlineKeyboardButton(
+                        "Add Me In Your Group",
+                        url=f"https://t.me/{bot_username}?startgroup=true",
+                    ),
+                ],
                 [
                     InlineKeyboardButton("Support", url=SUPPORT_CHAT),
                     InlineKeyboardButton("Updates", url=SUPPORT_CHANNEL),
                 ],
                 [
-                    InlineKeyboardButton("Owner", url=f"https://t.me/{OWNER_USERNAME}"),
+                    InlineKeyboardButton(
+                        "Owner",
+                        url=f"https://t.me/{OWNER_USERNAME}",
+                    ),
                 ],
             ]
         )
