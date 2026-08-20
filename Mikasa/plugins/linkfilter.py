@@ -35,8 +35,8 @@ def register(app: Client):
             member = await client.get_chat_member(chat_id, sender_id)
             if member.status in ("administrator", "creator"):
                 return
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[linkfilter] get_chat_member FAILED (chat {chat_id}, user {sender_id}): {e}")
 
         text = (message.text or "").lower().strip()
 
@@ -45,8 +45,8 @@ def register(app: Client):
 
         try:
             await message.delete()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[linkfilter] message delete FAILED (chat {chat_id}): {e}")
 
         bot_username = client.me.username
         add_me_url = f"https://t.me/{bot_username}?startgroup=true"
@@ -66,16 +66,17 @@ def register(app: Client):
                 WARNING_TEXT,
                 reply_markup=keyboard,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[linkfilter] warning message send FAILED (chat {chat_id}): {e}")
+        message.stop_propagation()
 
     @app.on_callback_query(filters.regex(f"^{CLOSE_CALLBACK_DATA}$"))
     async def close_warning(client: Client, callback_query: CallbackQuery):
         try:
             await callback_query.message.delete()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[linkfilter] close-button delete FAILED: {e}")
         try:
             await callback_query.answer()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[linkfilter] callback answer FAILED: {e}")
