@@ -13,8 +13,8 @@ app = Client(
 )
 
 start.register(app)
-reply.register(app)
 linkfilter.register(app)
+reply.register(app)
 broadcast.register(app)
 stats.register(app)
 logger.register(app)
