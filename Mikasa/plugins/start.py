@@ -1,15 +1,3 @@
-"""
-Mikasa/plugins/start.py
-/start command:
-  - Private chat: welcome image + caption + 2 rows of buttons
-      Row 1: Support | Updates
-      Row 2: Owner
-    Naya user ho toh mongo mein save hota hai aur logger ko batata hai.
-  - Group chat: alag (chhota) welcome message, group ko mongo mein save
-    (agar pehli baar hai) — group-add wala log yahan nahi, wo
-    ChatMemberUpdated handler (logger.py mein) automatically karta hai.
-"""
-
 from pyrogram import Client, filters
 from pyrogram.types import (
     InlineKeyboardButton,
