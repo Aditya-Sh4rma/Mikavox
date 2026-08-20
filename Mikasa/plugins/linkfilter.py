@@ -20,7 +20,7 @@ CLOSE_CALLBACK_DATA = "linkfilter_close"
 
 def register(app: Client):
 
-    @app.on_message(filters.text & filters.group & ~filters.regex(r"^/"))
+    @app.on_message(filters.text & filters.group & ~filters.regex(r"^/"), group=-1)
     async def delete_links(client: Client, message: Message):
         if message.from_user is None:
             return
@@ -68,6 +68,11 @@ def register(app: Client):
             )
         except Exception as e:
             print(f"[linkfilter] warning message send FAILED (chat {chat_id}): {e}")
+
+        # Is update ko yahin rok do -- reply.py ka auto_reply handler isi
+        # message ko na paaye, warna link-wala message uske group-counter
+        # me bhi count ho jaayega aur delete hone ke baad bhi bot reply
+        # bhejne ki koshish karega.
         message.stop_propagation()
 
     @app.on_callback_query(filters.regex(f"^{CLOSE_CALLBACK_DATA}$"))
