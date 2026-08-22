@@ -2,13 +2,13 @@ import asyncio
 import json
 import os
 import random
+import re
 
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
 from pyrogram.types import Message
 
-from config import ADMIN_IDS
-from Mikasa.emoji import PREMIUM_EMOJIS, get_random_emoji_html
+from Mikasa.emoji import get_random_emoji_html
 from Mikasa.sticker import get_random_sticker
 
 _ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,17 +16,19 @@ _ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 with open(os.path.join(_ROOT_DIR, "replies.json"), "r", encoding="utf-8") as f:
     DEFAULT_REPLIES: list[str] = json.load(f)
 
-# DEFAULT_REPLIES aur PREMIUM_EMOJIS dono module-import ke time hi load ho jaate
-# hain (upar wala `with open(...)` aur emoji.py ke andar wala dict), isliye
-# ye dono already in-memory cached hain -- runtime pe koi disk/network read nahi hota.
-print(f"[reply.py] Cached {len(DEFAULT_REPLIES)} default replies, {len(PREMIUM_EMOJIS)} premium emojis.")
+with open(os.path.join(_ROOT_DIR, "prm_replies.json"), "r", encoding="utf-8") as f:
+    PRM_REPLIES: dict[str, list[str]] = json.load(f)
 
-GROUP_REPLY_DELAY = 1  # seconds -- har group reply se pehle fixed gap
+print(f"[reply.py] Cached {len(DEFAULT_REPLIES)} default replies, {len(PRM_REPLIES)} prm keywords.")
+
+GROUP_REPLY_DELAY = 1
 
 group_msg_count: dict[int, int] = {}
 group_threshold: dict[int, int] = {}
 
 MIKASA_KEYWORD = "mikasa"
+
+_word_pattern = re.compile(r"\w+")
 
 
 def _get_threshold(chat_id: int) -> int:
@@ -35,38 +37,21 @@ def _get_threshold(chat_id: int) -> int:
     return group_threshold[chat_id]
 
 
+def _match_prm_keyword(text: str) -> str | None:
+    words = set(_word_pattern.findall(text))
+    for key in PRM_REPLIES:
+        if key in words:
+            return key
+    return None
+
+
 async def _send_with_emoji(message: Message, text: str):
     emoji_tag = get_random_emoji_html()
-    # Emoji ab message ke BAAD aayega (pehle "emoji message" tha, ab "message emoji")
     final_text = f"{text} {emoji_tag}" if emoji_tag else text
     await message.reply_text(final_text, parse_mode=ParseMode.HTML)
 
 
-async def _react(client: Client, message: Message):
-    if PREMIUM_EMOJIS:
-        emoji_char, emoji_id = random.choice(list(PREMIUM_EMOJIS.items()))
-        try:
-            await client.send_reaction(
-                chat_id=message.chat.id,
-                message_id=message.id,
-                emoji=int(emoji_id),
-            )
-            return
-        except Exception:
-            pass
-
-    try:
-        await client.send_reaction(
-            chat_id=message.chat.id,
-            message_id=message.id,
-            emoji="❤️",
-        )
-    except Exception:
-        pass
-
-
 async def _group_delay(message: Message):
-    """Group/supergroup me har reply se pehle fixed 1-second gap."""
     if message.chat.type in ("group", "supergroup"):
         await asyncio.sleep(GROUP_REPLY_DELAY)
 
@@ -81,9 +66,6 @@ def register(app: Client):
         sender_id = message.from_user.id
         chat_id = message.chat.id
 
-        if sender_id in ADMIN_IDS:
-            return
-
         if message.chat.type in ("group", "supergroup"):
             try:
                 member = await client.get_chat_member(chat_id, sender_id)
@@ -93,6 +75,12 @@ def register(app: Client):
                 pass
 
         text = (message.text or "").lower().strip()
+
+        matched_key = _match_prm_keyword(text)
+        if matched_key:
+            await _group_delay(message)
+            await _send_with_emoji(message, random.choice(PRM_REPLIES[matched_key]))
+            return
 
         is_reply_to_bot = (
             message.reply_to_message is not None
@@ -105,24 +93,16 @@ def register(app: Client):
             if DEFAULT_REPLIES:
                 await _group_delay(message)
                 await _send_with_emoji(message, random.choice(DEFAULT_REPLIES))
-                await _react(client, message)
             return
 
-        # Group activity counter -- ab HAR text message pe increment hota hai.
-        # Pehle ye sirf un messages pe increment hota tha jab upar koi bhi trigger
-        # match na hua ho (spam/link/reply-to-bot/smart-reply/random-chance sab miss),
-        # isliye ye sirf ~20-30% messages pe hi badhta tha aur threshold tak
-        # reliably kabhi pahuchta nahi tha -- yahi bug tha jiski wajah se
-        # beech-beech wala standalone premium emoji message kaam nahi kar raha tha.
         if message.chat.type in ("group", "supergroup"):
             group_msg_count[chat_id] = group_msg_count.get(chat_id, 0) + 1
             if group_msg_count[chat_id] >= _get_threshold(chat_id):
                 group_msg_count[chat_id] = 0
                 group_threshold.pop(chat_id, None)
 
-                if PREMIUM_EMOJIS:
-                    emoji_char, emoji_id = random.choice(list(PREMIUM_EMOJIS.items()))
-                    emoji_tag = f'<emoji id="{emoji_id}">{emoji_char}</emoji>'
+                emoji_tag = get_random_emoji_html()
+                if emoji_tag:
                     try:
                         await _group_delay(message)
                         await client.send_message(
@@ -138,9 +118,6 @@ def register(app: Client):
 
         sender_id = message.from_user.id
         chat_id = message.chat.id
-
-        if sender_id in ADMIN_IDS:
-            return
 
         if message.chat.type in ("group", "supergroup"):
             try:
@@ -168,4 +145,3 @@ def register(app: Client):
             await message.reply_sticker(sticker_id)
         except Exception:
             pass
-        await _react(client, message)
