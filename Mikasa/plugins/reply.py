@@ -2,7 +2,6 @@ import asyncio
 import json
 import os
 import random
-import re
 
 from pyrogram import Client, filters
 from pyrogram.enums import ParseMode
@@ -28,7 +27,7 @@ group_threshold: dict[int, int] = {}
 
 MIKASA_KEYWORD = "mikasa"
 
-_word_pattern = re.compile(r"\w+")
+_STRIP_CHARS = ".,!?;:\"'()[]{}"
 
 
 def _get_threshold(chat_id: int) -> int:
@@ -38,10 +37,10 @@ def _get_threshold(chat_id: int) -> int:
 
 
 def _match_prm_keyword(text: str) -> str | None:
-    words = set(_word_pattern.findall(text))
-    for key in PRM_REPLIES:
-        if key in words:
-            return key
+    for token in text.split():
+        cleaned = token.strip(_STRIP_CHARS)
+        if cleaned in PRM_REPLIES:
+            return cleaned
     return None
 
 
