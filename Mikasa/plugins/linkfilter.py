@@ -1,6 +1,6 @@
 import re
 
-from pyrogram import Client, filters
+from pyrogram import Client, enums, filters
 from pyrogram.types import (
     CallbackQuery,
     InlineKeyboardButton,
@@ -9,79 +9,82 @@ from pyrogram.types import (
 )
 
 from config import ADMIN_IDS
+from Mikasa import app
+from Mikasa.sudo import is_sudo, load_sudoers
 
 link_pattern = re.compile(r"(https?://|t\.me/|www\.)")
 
-# Burmese: "ဒီ group ထဲမှာ ကြော်ငြာ (Ads) ခွင့်မပြုပါ" -> "Is group me Ads Allowed nahi hai"
 WARNING_TEXT = "⚠️ ဒီ Group ထဲမှာ Ads (ကြော်ငြာ) ခွင့်မပြုပါ။"
 
 CLOSE_CALLBACK_DATA = "linkfilter_close"
 
 
-def register(app: Client):
+@app.on_message(filters.text & filters.group & ~filters.regex(r"^/"), group=-1)
+async def delete_links(client: Client, message: Message):
+    if message.from_user is None:
+        return
 
-    @app.on_message(filters.text & filters.group & ~filters.regex(r"^/"), group=-1)
-    async def delete_links(client: Client, message: Message):
-        if message.from_user is None:
+    sender_id = message.from_user.id
+    chat_id = message.chat.id
+
+    if sender_id in ADMIN_IDS:
+        return
+
+    await load_sudoers()
+    if is_sudo(sender_id):
+        return
+
+    try:
+        member = await client.get_chat_member(chat_id, sender_id)
+        if member.status in ("administrator", "creator"):
             return
+    except Exception:
+        pass
 
-        sender_id = message.from_user.id
-        chat_id = message.chat.id
+    text = (message.text or "").lower().strip()
 
-        if sender_id in ADMIN_IDS:
-            return
+    if not link_pattern.search(text):
+        return
 
-        try:
-            member = await client.get_chat_member(chat_id, sender_id)
-            if member.status in ("administrator", "creator"):
-                return
-        except Exception as e:
-            print(f"[linkfilter] get_chat_member FAILED (chat {chat_id}, user {sender_id}): {e}")
+    try:
+        await message.delete()
+    except Exception:
+        pass
 
-        text = (message.text or "").lower().strip()
+    add_me_url = f"https://t.me/{client.me.username}?startgroup=true"
 
-        if not link_pattern.search(text):
-            return
-
-        try:
-            await message.delete()
-        except Exception as e:
-            print(f"[linkfilter] message delete FAILED (chat {chat_id}): {e}")
-
-        bot_username = client.me.username
-        add_me_url = f"https://t.me/{bot_username}?startgroup=true"
-
-        keyboard = InlineKeyboardMarkup(
+    keyboard = InlineKeyboardMarkup(
+        [
             [
-                [
-                    InlineKeyboardButton("➕ Add Me", url=add_me_url),
-                    InlineKeyboardButton("✖️ Close", callback_data=CLOSE_CALLBACK_DATA),
-                ]
+                InlineKeyboardButton(
+                    "Add Me",
+                    url=add_me_url,
+                    style=enums.ButtonStyle.PRIMARY,
+                ),
+                InlineKeyboardButton(
+                    "Close",
+                    callback_data=CLOSE_CALLBACK_DATA,
+                    style=enums.ButtonStyle.DANGER,
+                ),
             ]
-        )
+        ]
+    )
 
-        try:
-            await client.send_message(
-                chat_id,
-                WARNING_TEXT,
-                reply_markup=keyboard,
-            )
-        except Exception as e:
-            print(f"[linkfilter] warning message send FAILED (chat {chat_id}): {e}")
+    try:
+        await client.send_message(chat_id, WARNING_TEXT, reply_markup=keyboard)
+    except Exception:
+        pass
 
-        # Is update ko yahin rok do -- reply.py ka auto_reply handler isi
-        # message ko na paaye, warna link-wala message uske group-counter
-        # me bhi count ho jaayega aur delete hone ke baad bhi bot reply
-        # bhejne ki koshish karega.
-        message.stop_propagation()
+    message.stop_propagation()
 
-    @app.on_callback_query(filters.regex(f"^{CLOSE_CALLBACK_DATA}$"))
-    async def close_warning(client: Client, callback_query: CallbackQuery):
-        try:
-            await callback_query.message.delete()
-        except Exception as e:
-            print(f"[linkfilter] close-button delete FAILED: {e}")
-        try:
-            await callback_query.answer()
-        except Exception as e:
-            print(f"[linkfilter] callback answer FAILED: {e}")
+
+@app.on_callback_query(filters.regex(f"^{CLOSE_CALLBACK_DATA}$"))
+async def close_warning(client: Client, callback_query: CallbackQuery):
+    try:
+        await callback_query.message.delete()
+    except Exception:
+        pass
+    try:
+        await callback_query.answer()
+    except Exception:
+        pass

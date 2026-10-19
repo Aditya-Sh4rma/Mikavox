@@ -7,6 +7,7 @@ _db = _client["mikasa"]
 
 users_col = _db["users"]
 groups_col = _db["groups"]
+cache_col = _db["cache"]
 
 
 async def add_user(user_id: int) -> bool:
@@ -45,3 +46,20 @@ async def all_user_ids() -> list[int]:
 async def all_group_ids() -> list[int]:
     cursor = groups_col.find({}, {"chat_id": 1, "_id": 0})
     return [doc["chat_id"] async for doc in cursor]
+
+
+async def add_sudo(user_id: int) -> None:
+    await cache_col.update_one(
+        {"_id": "sudoers"}, {"$addToSet": {"user_ids": user_id}}, upsert=True
+    )
+
+
+async def del_sudo(user_id: int) -> None:
+    await cache_col.update_one(
+        {"_id": "sudoers"}, {"$pull": {"user_ids": user_id}}
+    )
+
+
+async def get_sudoers() -> list[int]:
+    doc = await cache_col.find_one({"_id": "sudoers"})
+    return doc.get("user_ids", []) if doc else []
