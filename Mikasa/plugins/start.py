@@ -1,7 +1,7 @@
 from pyrogram import Client, enums, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from config import OWNER_USERNAME, START_IMAGE, SUPPORT_CHANNEL, SUPPORT_CHAT
+from config import OWNER_USERNAME, SOURCE_CODE_URL, START_IMAGE, SUPPORT_CHANNEL, SUPPORT_CHAT
 from Mikasa import app, mongo
 from Mikasa.plugins.logger import log_user_start
 
@@ -49,7 +49,12 @@ async def start_private(client: Client, message: Message):
                     "Owner",
                     url=f"https://t.me/{OWNER_USERNAME}",
                     style=enums.ButtonStyle.PRIMARY,
-                )
+                ),
+                InlineKeyboardButton(
+                    "Source Code",
+                    url=SOURCE_CODE_URL,
+                    style=enums.ButtonStyle.PRIMARY,
+                ),
             ],
         ]
     )
