@@ -18,7 +18,7 @@ OWNER_USERNAME = os.environ.get("OWNER_USERNAME", "itz_m4rvin")
 SUPPORT_CHAT = os.environ.get("SUPPORT_CHAT", "https://t.me/SamuraisSupport")
 SUPPORT_CHANNEL = os.environ.get("SUPPORT_CHANNEL", "https://t.me/SamuraisSupport")
 
-SOURCE_CODE_URL = "https://github.com/Aditya-Sh4rma/mikchat"
+SOURCE_CODE_URL = "https://github.com/Aditya-Sh4rma/Mikavox"
 
 START_IMAGE = os.environ.get("START_IMAGE", "")
 

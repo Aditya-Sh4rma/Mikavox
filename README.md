@@ -13,7 +13,6 @@ to groups and users. Built with Python and MongoDB.
 - Deletes links posted by non-admins and replies with a Close button
 - Stores users, groups and sudo users in MongoDB
 - Broadcasts to groups and users with flags
-- Sends a `Bot started` message to the log group on startup
 
 ## Requirements
 
@@ -34,8 +33,8 @@ apt install -y python3 python3-venv python3-pip git tmux
 Clone the bot and install the packages:
 
 ```bash
-git clone https://github.com/Aditya-Sh4rma/mikchat.git
-cd mikchat
+git clone https://github.com/Aditya-Sh4rma/Mikavox.git
+cd Mikavox
 
 python3 -m venv venv
 source venv/bin/activate
@@ -108,8 +107,8 @@ After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/root/mikchat
-ExecStart=/root/mikchat/venv/bin/python main.py
+WorkingDirectory=/root/Mikavox
+ExecStart=/root/Mikavox/venv/bin/python main.py
 Restart=always
 RestartSec=5
 
@@ -135,7 +134,7 @@ journalctl -u mikasa -f
 Update later:
 
 ```bash
-cd /root/mikchat
+cd /root/Mikavox
 git pull
 venv/bin/pip install -r requirements.txt
 systemctl restart mikasa
@@ -276,4 +275,4 @@ Owner: [@itz_m4rvin](https://t.me/itz_m4rvin)
 MIT, see `LICENSE`.
 
 If this bot saved you some time, a star on the repo is appreciated:
-[Aditya-Sh4rma/mikchat](https://github.com/Aditya-Sh4rma/mikchat).
+[Aditya-Sh4rma/Mikavox](https://github.com/Aditya-Sh4rma/Mikavox).
