@@ -20,11 +20,6 @@ SUPPORT_CHANNEL = os.environ.get("SUPPORT_CHANNEL", "https://t.me/SamuraisSuppor
 
 START_IMAGE = os.environ.get("START_IMAGE", "")
 
-SPAM_LIMIT = int(os.environ.get("SPAM_LIMIT", "5"))
-SPAM_WINDOW = int(os.environ.get("SPAM_WINDOW", "7"))
-
-REPLY_CHANCE = int(os.environ.get("REPLY_CHANCE", "20"))
-
 
 def validate():
     missing = []
