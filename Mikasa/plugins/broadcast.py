@@ -8,7 +8,6 @@ from Mikasa import app, mongo
 from Mikasa.sudo import load_sudoers, sudo_filter
 
 broadcasting = asyncio.Lock()
-_stop_requested = False
 
 
 def _parse_args(message: Message) -> tuple[set[str], str | None]:
@@ -66,15 +65,12 @@ async def broadcast(client: Client, message: Message):
             parse_mode=enums.ParseMode.HTML,
         )
 
-    global _stop_requested
-
     if broadcasting.locked():
         return await message.reply_text(
-            "A broadcast is already running. Use /stopbroadcast to stop it."
+            "A broadcast is already running. Please wait for it to finish."
         )
 
     await broadcasting.acquire()
-    _stop_requested = False
 
     try:
         include_users = "-user" in flags
@@ -101,9 +97,6 @@ async def broadcast(client: Client, message: Message):
         failed_lines: list[str] = []
 
         for chat_id, kind in targets:
-            if _stop_requested:
-                break
-
             try:
                 await _send(client, source, text, chat_id, copy)
                 if kind == "chat":
@@ -118,9 +111,8 @@ async def broadcast(client: Client, message: Message):
                 failed_lines.append(f"{chat_id} - {ex}")
                 continue
 
-        stopped = " (stopped)" if _stop_requested else ""
         result = (
-            f"Broadcast done{stopped}.\n"
+            f"Broadcast done.\n"
             f"Sent: {sent_chats} groups + {sent_users} users\n"
             f"Failed: {len(failed)}"
         )
@@ -138,14 +130,3 @@ async def broadcast(client: Client, message: Message):
             await status.edit_text(result)
     finally:
         broadcasting.release()
-
-
-@app.on_message(filters.command(["stopbroadcast", "stop_gcast"]) & sudo_filter)
-async def stop_broadcast(client: Client, message: Message):
-    global _stop_requested
-
-    if not broadcasting.locked():
-        return await message.reply_text("No broadcast is running.")
-
-    _stop_requested = True
-    await message.reply_text("Broadcast stop requested. It will stop after the current send.")

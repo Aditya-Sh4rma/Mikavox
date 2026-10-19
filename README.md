@@ -247,14 +247,13 @@ a worker dyno, so a web dyno is not needed.
 | Command | Who | Description |
 |---|---|---|
 | `/start` | Everyone | Saves the user or group and shows the start message |
-| `/stats` | Everyone | Shows total users and groups |
+| `/stats` | Owner or sudo | Shows total users and groups. Others are ignored |
 | `/addsudo <reply/@user/id>` | Owner | Adds a sudo user |
 | `/delsudo <reply/@user/id>` | Owner | Removes a sudo user |
 | `/listsudo` | Owner or sudo | Lists the owner and sudo users |
 | `/broadcast` | Owner or sudo | Sends a message to groups or users |
-| `/stopbroadcast` | Owner or sudo | Stops a running broadcast |
 
-Aliases: `/rmsudo`, `/sudolist` and `/stop_gcast`.
+Aliases: `/rmsudo` and `/sudolist`.
 
 ## Broadcast
 
