@@ -1,4 +1,4 @@
-pyrofork
+pyrotgfork==2.2.24.1
 TgCrypto
 pymongo
 python-dotenv

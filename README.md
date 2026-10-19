@@ -326,6 +326,7 @@ random when someone replies to it with a sticker.
 | MongoDB connection error | Password or Network Access settings |
 | `Conflict: terminated by other getUpdates request` | A second instance is running |
 | `database is locked` | Two instances share the same session file |
+| `pyrogram.enums has no ButtonStyle` | The wrong fork is installed, run `pip install -r requirements.txt` |
 | Broadcast stops halfway | Telegram flood limit, wait and try again |
 
 ## Contributing
