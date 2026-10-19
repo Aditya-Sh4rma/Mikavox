@@ -25,7 +25,6 @@ async def load_sudoers(force: bool = False) -> set[int]:
             _sudo_ids.update(await mongo.get_sudoers())
         except Exception:
             pass
-        _sudo_ids.update(config.ADMIN_IDS)
         if config.OWNER_ID:
             _sudo_ids.add(config.OWNER_ID)
 

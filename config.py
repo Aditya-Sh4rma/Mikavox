@@ -10,14 +10,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
 MONGO_URL = os.environ.get("MONGO_URL", "")
 
-ADMIN_IDS = [
-    int(x) for x in os.environ.get("ADMIN_IDS", "").split(",") if x.strip().isdigit()
-]
-
 OWNER_ID = int(os.environ.get("OWNER_ID", "0") or 0)
-
-if not OWNER_ID and ADMIN_IDS:
-    OWNER_ID = ADMIN_IDS[0]
 
 LOG_GROUP_ID = int(os.environ.get("LOG_GROUP_ID", "0"))
 
@@ -44,8 +37,8 @@ def validate():
         missing.append("BOT_TOKEN")
     if not MONGO_URL:
         missing.append("MONGO_URL")
-    if not OWNER_ID and not ADMIN_IDS:
-        missing.append("OWNER_ID (or ADMIN_IDS)")
+    if not OWNER_ID:
+        missing.append("OWNER_ID")
 
     if missing:
         raise SystemExit(f"Missing required env vars: {', '.join(missing)}")

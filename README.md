@@ -54,15 +54,15 @@ with `Ctrl+C`.
 | `BOT_TOKEN` | Yes | Bot token from @BotFather |
 | `MONGO_URL` | Yes | MongoDB connection string |
 | `OWNER_ID` | Yes | Telegram ID of the owner |
-| `ADMIN_IDS` | No | Extra sudo users, comma separated |
 | `LOG_GROUP_ID` | No | Group for start and join logs |
 | `OWNER_USERNAME` | No | Username used on the start button |
 | `SUPPORT_CHAT` | No | Support link on the start button |
 | `SUPPORT_CHANNEL` | No | Updates link on the start button |
 | `START_IMAGE` | No | Image URL or file ID for the start message |
 
-If `OWNER_ID` is not set, the first entry in `ADMIN_IDS` becomes the owner. One
-of them must be present or the bot exits during startup.
+`OWNER_ID` is required. The bot exits during startup if it is missing. The
+owner can add sudo users with `/addsudo`; those users then get access to the
+owner-level commands.
 
 The current defaults for the support and owner links are already set in
 `config.py`, so the start buttons work even if those variables are empty.
@@ -278,59 +278,6 @@ Examples:
 
 Groups are the default target. Failed targets are written to
 `broadcast_errors.txt` and sent back to the person who ran the command.
-
-## Project layout
-
-```text
-mikchat/
-|-- main.py
-|-- config.py
-|-- replies.json
-|-- prm_replies.json
-|-- smart_replies.json
-|-- requirements.txt
-|-- Procfile
-|-- runtime.txt
-|-- .env.example
-|-- .gitignore
-|-- LICENSE
-|-- README.md
-`-- Mikasa/
-    |-- __init__.py
-    |-- mongo.py
-    |-- emoji.py
-    |-- sticker.py
-    |-- sudo.py
-    |-- utils.py
-    `-- plugins/
-        |-- __init__.py
-        |-- start.py
-        |-- reply.py
-        |-- broadcast.py
-        |-- sudoers.py
-        |-- linkfilter.py
-        |-- logger.py
-        `-- stats.py
-```
-
-`Mikasa/__init__.py` creates the client and imports every module listed by
-`Mikasa/plugins/__init__.py`. Adding a new file to the plugins folder is enough;
-`main.py` does not need to change.
-
-| File | Purpose |
-|---|---|
-| `Mikasa/mongo.py` | Users, groups and sudo users |
-| `Mikasa/sudo.py` | Sudo cache and permission filters |
-| `Mikasa/utils.py` | User extraction and mention helpers |
-| `Mikasa/emoji.py` | Premium emoji IDs |
-| `Mikasa/sticker.py` | Sticker file IDs |
-| `Mikasa/plugins/start.py` | `/start` handling |
-| `Mikasa/plugins/reply.py` | Keyword replies, emoji drops and stickers |
-| `Mikasa/plugins/broadcast.py` | Broadcast commands |
-| `Mikasa/plugins/sudoers.py` | Sudo management commands |
-| `Mikasa/plugins/linkfilter.py` | Link deletion in groups |
-| `Mikasa/plugins/logger.py` | Start and group logs |
-| `Mikasa/plugins/stats.py` | `/stats` command |
 
 ## Customising
 

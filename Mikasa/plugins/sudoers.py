@@ -40,13 +40,6 @@ async def _sudo(client: Client, message: Message):
             parse_mode=enums.ParseMode.HTML,
         )
     else:
-        if user.id in config.ADMIN_IDS:
-            return await message.reply_text(
-                f"{user_mention(user)} is configured via <code>ADMIN_IDS</code> "
-                "and cannot be removed from here.",
-                parse_mode=enums.ParseMode.HTML,
-            )
-
         removed = await remove_sudo(user.id)
         if not removed:
             return await message.reply_text(

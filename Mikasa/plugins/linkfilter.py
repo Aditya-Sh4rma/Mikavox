@@ -8,7 +8,6 @@ from pyrogram.types import (
     Message,
 )
 
-from config import ADMIN_IDS
 from Mikasa import app
 from Mikasa.sudo import is_sudo, load_sudoers
 
@@ -26,9 +25,6 @@ async def delete_links(client: Client, message: Message):
 
     sender_id = message.from_user.id
     chat_id = message.chat.id
-
-    if sender_id in ADMIN_IDS:
-        return
 
     await load_sudoers()
     if is_sudo(sender_id):
