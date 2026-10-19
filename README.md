@@ -17,6 +17,7 @@ No dashboard, no Redis, no extra services. Just a bot process and a database.
 - Deletes links from non-admins and posts a warning with a Close button
 - Stores users, groups and sudo users in MongoDB
 - Broadcasts messages to groups and users with flags
+- Sends a `Bot started` notice to the log group on every startup
 - Loads every plugin inside `Mikasa/plugins` automatically
 
 ## Requirements
@@ -42,7 +43,7 @@ nano .env
 python main.py
 ```
 
-When the configuration is valid you will see `Mikasa Bot Running...`. Stop it
+When the configuration is valid you will see `Bot started`. Stop it
 with `Ctrl+C`.
 
 ## Environment variables
@@ -131,7 +132,7 @@ Do one manual run before creating the service:
 sudo -u mikasa venv/bin/python main.py
 ```
 
-Stop it once `Mikasa Bot Running...` appears, then create the unit file:
+Stop it once `Bot started` appears, then create the unit file:
 
 ```bash
 sudo nano /etc/systemd/system/mikasa.service

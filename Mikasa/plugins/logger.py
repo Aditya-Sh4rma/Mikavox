@@ -14,7 +14,7 @@ async def log_user_start(client: Client, user: User):
 
     await client.send_message(
         LOG_GROUP_ID,
-        f"🟢 <b>New Bot Start</b>\n"
+        f"<b>New user started the bot</b>\n"
         f"User: {name} {username}\n"
         f"ID: <code>{user.id}</code>",
         parse_mode=enums.ParseMode.HTML,
@@ -35,7 +35,7 @@ async def log_group_add(
 
     await client.send_message(
         LOG_GROUP_ID,
-        f"➕ <b>Bot Added to Group</b>\n"
+        f"<b>Bot added to group</b>\n"
         f"Group: {chat_title}\n"
         f"ID: <code>{chat_id}</code>\n"
         f"Added by: {by}",
@@ -57,7 +57,7 @@ async def log_group_remove(
 
     await client.send_message(
         LOG_GROUP_ID,
-        f"➖ <b>Bot Removed from Group</b>\n"
+        f"<b>Bot removed from group</b>\n"
         f"Group: {chat_title}\n"
         f"ID: <code>{chat_id}</code>\n"
         f"Removed by: {by}",

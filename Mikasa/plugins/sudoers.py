@@ -21,7 +21,8 @@ async def _sudo(client: Client, message: Message):
     user = await extract_user(client, message)
     if not user:
         return await message.reply_text(
-            "Usage: <code>/addsudo &lt;reply/@username/user_id&gt;</code>",
+            "Reply to a user or send a username or user id.\n"
+            "Example: <code>/addsudo @username</code>",
             parse_mode=enums.ParseMode.HTML,
         )
 
@@ -32,22 +33,22 @@ async def _sudo(client: Client, message: Message):
         added = await add_sudo(user.id)
         if not added:
             return await message.reply_text(
-                f"{user_mention(user)} is already a sudo user.",
+                f"{user_mention(user)} already has sudo access.",
                 parse_mode=enums.ParseMode.HTML,
             )
         await message.reply_text(
-            f"Added {user_mention(user)} to sudo users.",
+            f"{user_mention(user)} now has sudo access.",
             parse_mode=enums.ParseMode.HTML,
         )
     else:
         removed = await remove_sudo(user.id)
         if not removed:
             return await message.reply_text(
-                f"{user_mention(user)} is not a sudo user.",
+                f"{user_mention(user)} does not have sudo access.",
                 parse_mode=enums.ParseMode.HTML,
             )
         await message.reply_text(
-            f"Removed {user_mention(user)} from sudo users.",
+            f"{user_mention(user)} no longer has sudo access.",
             parse_mode=enums.ParseMode.HTML,
         )
 
@@ -59,27 +60,27 @@ async def _listsudo(client: Client, message: Message):
     if not (is_owner(sender_id) or sender_id in get_sudo_ids()):
         return
 
-    status = await message.reply_text("Fetching sudo users list...")
+    status = await message.reply_text("Loading list...")
 
-    lines = ["<b><u>Owner:</u></b>"]
     try:
         owner = await client.get_users(config.OWNER_ID)
-        lines.append(f"- {user_mention(owner)}")
+        owner_text = user_mention(owner)
     except Exception:
-        lines.append(f"- <code>{config.OWNER_ID}</code>")
+        owner_text = f"<code>{config.OWNER_ID}</code>"
 
-    sudoers = [uid for uid in await mongo.get_sudoers() if uid != config.OWNER_ID]
-    if sudoers:
-        lines.append("")
-        lines.append("<b><u>Sudo users:</u></b>")
-        for user_id in sudoers:
-            try:
-                user = await client.get_users(user_id)
-                lines.append(f"- {user_mention(user)}")
-            except Exception:
-                lines.append(f"- <code>{user_id}</code>")
-    else:
-        lines.append("")
-        lines.append("<i>No sudo users added yet.</i>")
+    names = []
+    for user_id in await mongo.get_sudoers():
+        if user_id == config.OWNER_ID:
+            continue
+        try:
+            user = await client.get_users(user_id)
+            names.append(user_mention(user))
+        except Exception:
+            names.append(f"<code>{user_id}</code>")
 
-    await status.edit_text("\n".join(lines), parse_mode=enums.ParseMode.HTML)
+    sudo_text = ", ".join(names) if names else "none"
+
+    await status.edit_text(
+        f"<b>Bot access</b>\n\nOwner: {owner_text}\nSudo: {sudo_text}",
+        parse_mode=enums.ParseMode.HTML,
+    )

@@ -6,20 +6,12 @@ from Mikasa import app, mongo
 from Mikasa.plugins.logger import log_user_start
 
 PRIVATE_CAPTION = (
-    "မင်္ဂလာပါ! ကျွန်တော် Mikasa ပါ။ 🪙\n\n"
-    "Group ထဲမှာ အလိုအလျောက် စာပြန်ပေးတဲ့ Bot ပါ။\n\n"
-    "• စကားပြောရင် အလိုအလျောက် ပြန်ဖြေပေးမယ်\n"
-    "• “mikasa” လို့ ရေးရင် ဒါမှမဟုတ် ကျွန်တော့်ကို reply လုပ်ရင် ပြန်ဖြေမယ်\n"
-    "• Premium emoji နဲ့ sticker တွေ ပို့ပေးမယ်\n"
-    "• Link တွေ (Ads) ကို ဖျက်ပေးမယ်\n\n"
-    "အောက်က button နဲ့ သင့် Group ထဲကို ထည့်လိုက်ပါ။\n"
-    "အသုံးပြုပေးတဲ့အတွက် ကျေးဇူးတင်ပါတယ်။"
+    "မင်္ဂလာပါ! ဒီ Bot က Group ထဲမှာ အလိုအလျောက် စာပြန်ပေးပါတယ်။\n"
+    "Premium emoji, sticker နဲ့ link ဖျက်ပေးတာတွေလည်း လုပ်ပေးပါတယ်။\n\n"
+    "အောက်က button နဲ့ သင့် Group ထဲ ထည့်လိုက်ပါ။"
 )
 
-GROUP_CAPTION = (
-    "မင်္ဂလာပါ! 🪙\n"
-    "ဒီ Group ထဲမှာ Auto Reply Bot အသင့်ပါပဲ။"
-)
+GROUP_CAPTION = "မင်္ဂလာပါ! ဒီ Group ထဲမှာ Auto Reply Bot အသင့်ပါပဲ။"
 
 
 @app.on_message(filters.command("start") & filters.private)
